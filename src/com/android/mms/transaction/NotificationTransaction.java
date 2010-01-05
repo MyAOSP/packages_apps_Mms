@@ -45,6 +45,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.Telephony.Mms;
+import android.os.Handler;
 import android.provider.Telephony.Mms.Inbox;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -125,6 +126,7 @@ public class NotificationTransaction extends Transaction implements Runnable {
     @Override
     public void process() {
         new Thread(this, "NotificationTransaction").start();
+      new Handler().post(this);
     }
 
     public void run() {

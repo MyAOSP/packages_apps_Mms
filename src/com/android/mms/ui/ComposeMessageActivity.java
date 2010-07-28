@@ -2540,7 +2540,12 @@ public class ComposeMessageActivity extends Activity
                 exitComposeMessageActivity(new Runnable() {
                     @Override
                     public void run() {
-                        finish();
+                        // Always return to all threads
+                        if (mBackToAllThreads) {
+                            goToConversationList();
+                        } else {
+                            finish();
+                        }
                     }
                 });
                 return true;

@@ -635,7 +635,6 @@ public class ComposeMessageActivity extends Activity
     }
 
     private final OnKeyListener mSubjectKeyListener = new OnKeyListener() {
-        @Override
         public boolean onKey(View v, int keyCode, KeyEvent event) {
             if (event.getAction() != KeyEvent.ACTION_DOWN) {
                 return false;
@@ -648,6 +647,15 @@ public class ComposeMessageActivity extends Activity
                 return true;
             }
             return false;
+        }
+    };
+
+    // Shows the activity's progress spinner. Should be canceled if exiting the activity.
+    private Runnable mShowProgressDialogRunnable = new Runnable() {
+        public void run() {
+            if (mProgressDialog != null) {
+                mProgressDialog.show();
+            }
         }
     };
 
@@ -761,7 +769,6 @@ public class ComposeMessageActivity extends Activity
             mMessageItem = messageItem;
         }
 
-        @Override
         public void onClick(DialogInterface dialog, int whichButton) {
             dialog.dismiss();
 
@@ -785,7 +792,6 @@ public class ComposeMessageActivity extends Activity
     }
 
     private class DiscardDraftListener implements OnClickListener {
-        @Override
         public void onClick(DialogInterface dialog, int whichButton) {
             mWorkingMessage.discard();
             dialog.dismiss();
@@ -794,7 +800,6 @@ public class ComposeMessageActivity extends Activity
     }
 
     private class SendIgnoreInvalidRecipientListener implements OnClickListener {
-        @Override
         public void onClick(DialogInterface dialog, int whichButton) {
             sendMessage(true);
             dialog.dismiss();
@@ -802,7 +807,6 @@ public class ComposeMessageActivity extends Activity
     }
 
     private class CancelSendingListener implements OnClickListener {
-        @Override
         public void onClick(DialogInterface dialog, int whichButton) {
             if (isRecipientsEditorVisible()) {
                 mRecipientsEditor.requestFocus();
@@ -844,11 +848,9 @@ public class ComposeMessageActivity extends Activity
     }
 
     private final TextWatcher mRecipientsWatcher = new TextWatcher() {
-        @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
         }
 
-        @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
             // This is a workaround for bug 1609057.  Since onUserInteraction() is
             // not called when the user touches the soft keyboard, we pretend it was
@@ -857,7 +859,6 @@ public class ComposeMessageActivity extends Activity
             onUserInteraction();
         }
 
-        @Override
         public void afterTextChanged(Editable s) {
             // Bug 1474782 describes a situation in which we send to
             // the wrong recipient.  We have been unable to reproduce this,
@@ -924,7 +925,6 @@ public class ComposeMessageActivity extends Activity
 
     private final OnCreateContextMenuListener mRecipientsMenuCreateListener =
         new OnCreateContextMenuListener() {
-        @Override
         public void onCreateContextMenu(ContextMenu menu, View v,
                 ContextMenuInfo menuInfo) {
             if (menuInfo != null) {
@@ -951,7 +951,6 @@ public class ComposeMessageActivity extends Activity
             mRecipient = recipient;
         }
 
-        @Override
         public boolean onMenuItemClick(MenuItem item) {
             switch (item.getItemId()) {
                 // Context menu handlers for the recipients editor.
@@ -1144,7 +1143,6 @@ public class ComposeMessageActivity extends Activity
 
     private final OnCreateContextMenuListener mMsgListMenuCreateListener =
         new OnCreateContextMenuListener() {
-        @Override
         public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
             if (!isCursorValid()) {
                 return;
@@ -1278,8 +1276,6 @@ public class ComposeMessageActivity extends Activity
         synchronized(mConversation) {
             if (mConversation.getMessageCount() <= 1) {
                 mConversation.clearThreadId();
-                MessagingNotification.setCurrentlyDisplayedThreadId(
-                    MessagingNotification.THREAD_NONE);
             }
         }
         // Delete the old undelivered SMS and load its content.
@@ -1420,7 +1416,6 @@ public class ComposeMessageActivity extends Activity
             mMsgItem = msgItem;
         }
 
-        @Override
         public boolean onMenuItemClick(MenuItem item) {
             if (mMsgItem == null) {
                 return false;
@@ -1501,7 +1496,6 @@ public class ComposeMessageActivity extends Activity
         values.put("locked", locked ? 1 : 0);
 
         new Thread(new Runnable() {
-            @Override
             public void run() {
                 getContentResolver().update(lockUri,
                         values, null, null);
@@ -1924,6 +1918,8 @@ public class ComposeMessageActivity extends Activity
         mRecipientsEditor.setOnSelectChipRunnable(new Runnable() {
             @Override
             public void run() {
+        mRecipientsEditor.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 // After the user selects an item in the pop-up contacts list, move the
                 // focus to the text editor if there is only one recipient.  This helps
                 // the common case of selecting one recipient and then typing a message,
@@ -1941,7 +1937,6 @@ public class ComposeMessageActivity extends Activity
         });
 
         mRecipientsEditor.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (!hasFocus) {
                     RecipientsEditor editor = (RecipientsEditor) v;
@@ -2313,7 +2308,6 @@ public class ComposeMessageActivity extends Activity
         // updateSendFailedNotificationForThread makes a database call, so do the work off
         // of the ui thread.
         new Thread(new Runnable() {
-            @Override
             public void run() {
                 MessagingNotification.updateSendFailedNotificationForThread(
                         ComposeMessageActivity.this, threadId);
@@ -2353,7 +2347,6 @@ public class ComposeMessageActivity extends Activity
         // here gets overwritten to the original title.  Do this delayed as a
         // workaround.
         mMessageListItemHandler.postDelayed(new Runnable() {
-            @Override
             public void run() {
                 ContactList recipients = isRecipientsEditorVisible() ?
                         mRecipientsEditor.constructContactsFromInput(false) : getRecipients();
@@ -2405,6 +2398,7 @@ public class ComposeMessageActivity extends Activity
         }
 
         mIsRunning = false;
+        clearPendingProgressDialog();
     }
 
     @Override
@@ -2538,7 +2532,6 @@ public class ComposeMessageActivity extends Activity
                 break;
             case KeyEvent.KEYCODE_BACK:
                 exitComposeMessageActivity(new Runnable() {
-                    @Override
                     public void run() {
                         // Always return to all threads
                         if (mBackToAllThreads) {
@@ -2595,12 +2588,10 @@ public class ComposeMessageActivity extends Activity
                     && (View.VISIBLE == mSubjectTextEditor.getVisibility());
     }
 
-    @Override
     public void onAttachmentChanged() {
         // Have to make sure we're on the UI thread. This function can be called off of the UI
         // thread when we're adding multi-attachments
         runOnUiThread(new Runnable() {
-            @Override
             public void run() {
                 drawBottomPanel();
                 updateSendButtonState();
@@ -2609,12 +2600,10 @@ public class ComposeMessageActivity extends Activity
         });
     }
 
-    @Override
     public void onProtocolChanged(final boolean mms) {
         // Have to make sure we're on the UI thread. This function can be called off of the UI
         // thread when we're adding multi-attachments
         runOnUiThread(new Runnable() {
-            @Override
             public void run() {
                 toastConvertInfo(mms);
                 showSmsOrMmsSendButton(mms);
@@ -2648,18 +2637,15 @@ public class ComposeMessageActivity extends Activity
     }
 
     Runnable mResetMessageRunnable = new Runnable() {
-        @Override
         public void run() {
             resetMessage();
         }
     };
 
-    @Override
     public void onPreMessageSent() {
         runOnUiThread(mResetMessageRunnable);
     }
 
-    @Override
     public void onMessageSent() {
         // This callback can come in on any thread; put it on the main thread to avoid
         // concurrency problems
@@ -2682,14 +2668,22 @@ public class ComposeMessageActivity extends Activity
                 updateThreadIdIfRunning();
             }
         });
+        // If we already have messages in the list adapter, it
+        // will be auto-requerying; don't thrash another query in.
+        // TODO: relying on auto-requerying seems unreliable when priming an MMS into the outbox.
+        // Need to investigate.
+//        if (mMsgListAdapter.getCount() == 0) {
+            if (LogTag.VERBOSE) {
+                log("onMessageSent");
+            }
+            startMsgListQuery();
+//        }
     }
 
-    @Override
     public void onMaxPendingMessagesReached() {
         saveDraft(false);
 
         runOnUiThread(new Runnable() {
-            @Override
             public void run() {
                 Toast.makeText(ComposeMessageActivity.this, R.string.too_many_unsent_mms,
                         Toast.LENGTH_LONG).show();
@@ -2697,10 +2691,8 @@ public class ComposeMessageActivity extends Activity
         });
     }
 
-    @Override
     public void onAttachmentError(final int error) {
         runOnUiThread(new Runnable() {
-            @Override
             public void run() {
                 handleAddAttachmentError(error, R.string.type_picture);
                 onMessageSent();        // now requery the list of messages
@@ -2840,7 +2832,6 @@ public class ComposeMessageActivity extends Activity
             case android.R.id.home:
             case MENU_CONVERSATION_LIST:
                 exitComposeMessageActivity(new Runnable() {
-                    @Override
                     public void run() {
                         goToConversationList();
                     }
@@ -2979,7 +2970,6 @@ public class ComposeMessageActivity extends Activity
                     this, AttachmentTypeSelectorAdapter.MODE_WITH_SLIDESHOW);
         }
         builder.setAdapter(mAttachmentTypeSelectorAdapter, new DialogInterface.OnClickListener() {
-            @Override
             public void onClick(DialogInterface dialog, int which) {
                 addAttachment(mAttachmentTypeSelectorAdapter.buttonToCommand(which), replace);
                 dialog.dismiss();
@@ -3145,7 +3135,6 @@ public class ComposeMessageActivity extends Activity
         progressDialog.setCancelable(false);
 
         final Runnable showProgress = new Runnable() {
-            @Override
             public void run() {
                 progressDialog.show();
             }
@@ -3155,7 +3144,6 @@ public class ComposeMessageActivity extends Activity
         handler.postDelayed(showProgress, 1000);
 
         new Thread(new Runnable() {
-            @Override
             public void run() {
                 final ContactList list;
                  try {
@@ -3167,7 +3155,6 @@ public class ComposeMessageActivity extends Activity
                 // TODO: there is already code to update the contact header widget and recipients
                 // editor if the contacts change. we can re-use that code.
                 final Runnable populateWorker = new Runnable() {
-                    @Override
                     public void run() {
                         mRecipientsEditor.populate(list);
                         updateTitle(list);
@@ -3180,7 +3167,6 @@ public class ComposeMessageActivity extends Activity
 
     private final ResizeImageResultCallback mResizeImageCallback = new ResizeImageResultCallback() {
         // TODO: make this produce a Uri, that's what we want anyway
-        @Override
         public void onResizeResult(PduPart part, boolean append) {
             if (part == null) {
                 handleAddAttachmentError(WorkingMessage.UNKNOWN_ERROR, R.string.type_picture);
@@ -3217,7 +3203,6 @@ public class ComposeMessageActivity extends Activity
         Log.d(TAG, "handleAddAttachmentError: " + error);
 
         runOnUiThread(new Runnable() {
-            @Override
             public void run() {
                 Resources res = getResources();
                 String mediaType = res.getString(mediaTypeStringId);
@@ -3252,6 +3237,7 @@ public class ComposeMessageActivity extends Activity
     private void addImageAsync(final Uri uri, final boolean append) {
         getAsyncDialog().runAsync(new Runnable() {
             @Override
+        runAsyncWithDialog(new Runnable() {
             public void run() {
                 addImage(uri, append);
             }
@@ -3280,6 +3266,7 @@ public class ComposeMessageActivity extends Activity
     private void addVideoAsync(final Uri uri, final boolean append) {
         getAsyncDialog().runAsync(new Runnable() {
             @Override
+        runAsyncWithDialog(new Runnable() {
             public void run() {
                 addVideo(uri, append);
             }
@@ -3348,6 +3335,7 @@ public class ComposeMessageActivity extends Activity
                 final Uri uri = (Uri)extras.getParcelable(Intent.EXTRA_STREAM);
                 getAsyncDialog().runAsync(new Runnable() {
                     @Override
+                runAsyncWithDialog(new Runnable() {
                     public void run() {
                         addAttachment(mimeType, uri, false);
                     }
@@ -3378,6 +3366,7 @@ public class ComposeMessageActivity extends Activity
             final int numberToImport = importCount;
             getAsyncDialog().runAsync(new Runnable() {
                 @Override
+            runAsyncWithDialog(new Runnable() {
                 public void run() {
                     for (int i = 0; i < numberToImport; i++) {
                         Parcelable uri = uris.get(i);
@@ -3457,7 +3446,6 @@ public class ComposeMessageActivity extends Activity
     // Interface methods
     //==========================================================
 
-    @Override
     public void onClick(View v) {
         if ((v == mSendButtonSms || v == mSendButtonMms) && isPreparedForSending()) {
             confirmSendMessageIfNeeded();
@@ -3486,7 +3474,6 @@ public class ComposeMessageActivity extends Activity
         startActivityForResult(intent, REQUEST_CODE_PICK);
     }
 
-    @Override
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
         if (event != null) {
             boolean sendNow;
@@ -3513,11 +3500,9 @@ public class ComposeMessageActivity extends Activity
     }
 
     private final TextWatcher mTextEditorWatcher = new TextWatcher() {
-        @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
         }
 
-        @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
             // This is a workaround for bug 1609057.  Since onUserInteraction() is
             // not called when the user touches the soft keyboard, we pretend it was
@@ -3534,7 +3519,6 @@ public class ComposeMessageActivity extends Activity
             ensureCorrectButtonHeight();
         }
 
-        @Override
         public void afterTextChanged(Editable s) {
         }
     };
@@ -3558,16 +3542,13 @@ public class ComposeMessageActivity extends Activity
     }
 
     private final TextWatcher mSubjectEditorWatcher = new TextWatcher() {
-        @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
-        @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
             mWorkingMessage.setSubject(s, true);
             updateSendButtonState();
         }
 
-        @Override
         public void afterTextChanged(Editable s) { }
     };
 
@@ -3689,7 +3670,6 @@ public class ComposeMessageActivity extends Activity
         mMsgListView.setVisibility(View.VISIBLE);
         mMsgListView.setOnCreateContextMenuListener(mMsgListMenuCreateListener);
         mMsgListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (view != null) {
                     ((MessageListItem) view).onMessageListItemClick();
@@ -3985,12 +3965,10 @@ public class ComposeMessageActivity extends Activity
 
     private final MessageListAdapter.OnDataSetChangedListener
                     mDataSetChangedListener = new MessageListAdapter.OnDataSetChangedListener() {
-        @Override
         public void onDataSetChanged(MessageListAdapter adapter) {
             mPossiblePendingNotification = true;
         }
 
-        @Override
         public void onContentChanged(MessageListAdapter adapter) {
             startMsgListQuery();
         }
@@ -4227,7 +4205,7 @@ public class ComposeMessageActivity extends Activity
                     // Update the notification for new messages since they
                     // may be deleted.
                     MessagingNotification.nonBlockingUpdateNewMessageIndicator(
-                            ComposeMessageActivity.this, MessagingNotification.THREAD_NONE, false);
+                            ComposeMessageActivity.this, false, false);
                     // Update the notification for failed messages since they
                     // may be deleted.
                     updateSendFailedNotification();
@@ -4302,7 +4280,6 @@ public class ComposeMessageActivity extends Activity
                     new String[] {"icon", "name", "text"},
                     new int[] {R.id.smiley_icon, R.id.smiley_name, R.id.smiley_text});
             SimpleAdapter.ViewBinder viewBinder = new SimpleAdapter.ViewBinder() {
-                @Override
                 public boolean setViewValue(View view, Object data, String textRepresentation) {
                     if (view instanceof ImageView) {
                         Drawable img = getResources().getDrawable((Integer)data);
@@ -4320,7 +4297,6 @@ public class ComposeMessageActivity extends Activity
 
             b.setCancelable(true);
             b.setAdapter(a, new DialogInterface.OnClickListener() {
-                @Override
                 @SuppressWarnings("unchecked")
                 public final void onClick(DialogInterface dialog, int which) {
                     HashMap<String, Object> item = (HashMap<String, Object>) a.getItem(which);
@@ -4409,7 +4385,6 @@ public class ComposeMessageActivity extends Activity
     public void onUpdate(final Contact updated) {
         // Using an existing handler for the post, rather than conjuring up a new one.
         mMessageListItemHandler.post(new Runnable() {
-            @Override
             public void run() {
                 ContactList recipients = isRecipientsEditorVisible() ?
                         mRecipientsEditor.constructContactsFromInput(false) : getRecipients();

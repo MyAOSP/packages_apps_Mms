@@ -805,7 +805,7 @@ public class ConversationList extends ListActivity implements DraftCache.OnDraft
                 // Update the notification for new messages since they
                 // may be deleted.
                 MessagingNotification.nonBlockingUpdateNewMessageIndicator(ConversationList.this,
-                        MessagingNotification.THREAD_NONE, false);
+                        false, false);
                 // Update the notification for failed messages since they
                 // may be deleted.
                 MessagingNotification.nonBlockingUpdateSendFailedNotification(ConversationList.this);

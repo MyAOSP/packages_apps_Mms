@@ -39,7 +39,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
-import android.database.sqlite.SqliteWrapper;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -427,10 +426,7 @@ public class TransactionService extends Service implements Observer {
                         case Transaction.RETRIEVE_TRANSACTION:
                             // We're already in a non-UI thread called from
                             // NotificationTransacation.run(), so ok to block here.
-                            long threadId = MessagingNotification.getThreadId(
-                                    this, state.getContentUri());
-                            MessagingNotification.blockingUpdateNewMessageIndicator(this,
-                                    threadId,
+                            MessagingNotification.blockingUpdateNewMessageIndicator(this, true,
                                     false);
                             MessagingNotification.updateDownloadFailedNotification(this);
                             break;

@@ -29,16 +29,16 @@
     </style>
 
     <style name="WidgetTitle" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
-        <item name="android:textColor">#efefef</item>
+        <item name="android:textColor">#ff2f87a8</item>
         <item name="android:singleLine">true</item>
     </style>
 
     <style name="NotificationPrimaryText">
-        <item name="android:textColor">#dddddd</item>
+        <item name="android:textColor">#ff2f87a8</item>
     </style>
 
     <style name="NotificationSecondaryText">
-        <item name="android:textColor">#aaaaaa</item>
+        <item name="android:textColor">#ff2f87a8</item>
     </style>
 
     <style name="NotificationSubjectText">

@@ -823,6 +823,7 @@ public class ComposeMessageActivity extends Activity
                 String title = getResourcesString(R.string.has_invalid_recipient,
                         mRecipientsEditor.formatInvalidNumbers(isMms));
                 new AlertDialog.Builder(this)
+                    .setIconAttribute(android.R.attr.alertDialogIcon)
                     .setTitle(title)
                     .setMessage(R.string.invalid_recipient_message)
                     .setPositiveButton(R.string.try_to_send,
@@ -831,6 +832,7 @@ public class ComposeMessageActivity extends Activity
                     .show();
             } else {
                 new AlertDialog.Builder(this)
+                    .setIconAttribute(android.R.attr.alertDialogIcon)
                     .setTitle(R.string.cannot_send_message)
                     .setMessage(R.string.cannot_send_message_reason)
                     .setPositiveButton(R.string.yes, new CancelSendingListener())
@@ -1163,6 +1165,10 @@ public class ComposeMessageActivity extends Activity
             menu.setHeaderTitle(R.string.message_options);
 
             MsgListMenuClickListener l = new MsgListMenuClickListener(msgItem);
+            // When the listener is called, it is not guaranteed that the cursor
+            // will be pointing to the current message, so we must pass the
+            // correct position to the listener.
+            MsgListMenuClickListener l = new MsgListMenuClickListener(cursor.getPosition());
 
             // It is unclear what would make most sense for copying an MMS message
             // to the clipboard, so we currently do SMS only.
@@ -1393,6 +1399,22 @@ public class ComposeMessageActivity extends Activity
      */
     private final class MsgListMenuClickListener implements MenuItem.OnMenuItemClickListener {
         private MessageItem mMsgItem;
+        private int mPosition;
+
+        public MsgListMenuClickListener(int position) {
+            mPosition = position;
+        }
+
+        public boolean onMenuItemClick(MenuItem item) {
+            if (!isCursorValid()) {
+                return false;
+            }
+            Cursor cursor = mMsgListAdapter.getCursor();
+            cursor.moveToPosition(mPosition);
+
+            String type = cursor.getString(COLUMN_MSG_TYPE);
+            long msgId = cursor.getLong(COLUMN_ID);
+            MessageItem msgItem = getMessageItem(type, msgId, true);
 
         public MsgListMenuClickListener(MessageItem msgItem) {
             mMsgItem = msgItem;
@@ -2389,10 +2411,20 @@ public class ComposeMessageActivity extends Activity
     protected void onStop() {
         super.onStop();
 
+        // No need to do the querying when finished this activity
+        mBackgroundQueryHandler.cancelOperation(MESSAGE_LIST_QUERY_TOKEN);
+
         // Allow any blocked calls to update the thread's read status.
         mConversation.blockMarkAsRead(false);
 
         if (mMsgListAdapter != null) {
+            // Close the cursor in the ListAdapter if the activity stopped.
+            Cursor cursor = mMsgListAdapter.getCursor();
+
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+
             mMsgListAdapter.changeCursor(null);
             mMsgListAdapter.cancelBackgroundLoading();
         }
@@ -2508,7 +2540,12 @@ public class ComposeMessageActivity extends Activity
                 exitComposeMessageActivity(new Runnable() {
                     @Override
                     public void run() {
-                        finish();
+                        // Always return to all threads
+                        if (mBackToAllThreads) {
+                            goToConversationList();
+                        } else {
+                            finish();
+                        }
                     }
                 });
                 return true;
@@ -3092,6 +3129,8 @@ public class ComposeMessageActivity extends Activity
         final int recipientLimit = MmsConfig.getRecipientLimit();
         if (recipientLimit != Integer.MAX_VALUE && recipientCount > recipientLimit) {
             new AlertDialog.Builder(this)
+                    .setTitle(R.string.pick_too_many_recipients)
+                    .setIconAttribute(android.R.attr.alertDialogIcon)
                     .setMessage(getString(R.string.too_many_recipients, recipientCount, recipientLimit))
                     .setPositiveButton(android.R.string.ok, null)
                     .create().show();
@@ -4450,6 +4489,7 @@ public class ComposeMessageActivity extends Activity
             if (prediction.score > mGestureSensitivity) {
                 Bundle b = new Bundle();
                 b.putLong("id", Long.parseLong(prediction.name));
+                getLoaderManager().destroyLoader(LOAD_TEMPLATE_BY_ID);
                 getLoaderManager().initLoader(LOAD_TEMPLATE_BY_ID, b, this);
             }
         }

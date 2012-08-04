@@ -37,6 +37,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Handler;
 import android.provider.Telephony.Mms;
 import android.provider.Telephony.Mms.Inbox;
 import android.text.TextUtils;
@@ -124,6 +125,7 @@ public class RetrieveTransaction extends Transaction implements Runnable {
     @Override
     public void process() {
         new Thread(this, "RetrieveTransaction").start();
+      new Handler().post(this);
     }
 
     public void run() {

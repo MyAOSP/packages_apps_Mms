@@ -3125,6 +3125,8 @@ public class ComposeMessageActivity extends Activity
                 if (data != null) {
                     WorkingMessage newMessage = WorkingMessage.load(this, data.getData());
                     if (newMessage != null) {
+                        // Here we should keep the subject from the old mWorkingMessage.
+                        setNewMessageSubject(newMessage);
                         mWorkingMessage = newMessage;
                         mWorkingMessage.setConversation(mConversation);
                         updateThreadIdIfRunning();
@@ -3218,6 +3220,16 @@ public class ComposeMessageActivity extends Activity
         }
         mRecipientsEditor.setText(null);
         mRecipientsEditor.populate(list);
+
+    /**
+     * Set newWorkingMessage's subject from mWorkingMessage. If we create a new
+     * slideshow. We will drop the old workingMessage and create a new one. And
+     * we should keep the subject of the old workingMessage.
+     */
+    private void setNewMessageSubject(WorkingMessage newWorkingMessage) {
+        if (null != newWorkingMessage && mWorkingMessage.hasSubject()) {
+            newWorkingMessage.setSubject(mWorkingMessage.getSubject(), true);
+        }
     }
 
     private void processPickResult(final Intent data) {
@@ -3848,7 +3860,10 @@ public class ComposeMessageActivity extends Activity
                 new Runnable() {
                     @Override
                     public void run() {
-                        drawTopPanel(false);
+                        // It decides whether or not to display the subject editText view,
+                        // according to the situation whether there's subject
+                        // or the editText view is visible before leaving it.
+                        drawTopPanel(isSubjectEditorVisible());
                         drawBottomPanel();
                         updateSendButtonState();
                     }

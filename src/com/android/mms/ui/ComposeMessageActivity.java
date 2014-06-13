@@ -3275,6 +3275,7 @@ public class ComposeMessageActivity extends Activity
         }
         mRecipientsEditor.setText(null);
         mRecipientsEditor.populate(list);
+    }
 
     /**
      * Set newWorkingMessage's subject from mWorkingMessage. If we create a new
